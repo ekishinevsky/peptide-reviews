@@ -4,95 +4,133 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import StarRating from "./StarRating";
 
+interface DimensionData {
+  avg: number;
+  count: number;
+  userRating: number | null;
+}
+
 interface InteractiveRatingProps {
   peptideId: string;
-  initialUserRating: number | null;
-  initialAvg: number;
-  initialCount: number;
   isLoggedIn: boolean;
+  general: DimensionData;
+  effectiveness: DimensionData;
+  sideEffects: DimensionData;
 }
+
+type Dimension = "general" | "effectiveness" | "sideEffects";
+
+const DIMENSION_CONFIG: Record<Dimension, { label: string; hint?: string; rpcParam: string }> = {
+  effectiveness: { label: "Effectiveness", rpcParam: "p_effectiveness" },
+  sideEffects: { label: "Side Effects", hint: "5 = minimal", rpcParam: "p_side_effects" },
+  general: { label: "Overall", rpcParam: "p_stars" },
+};
 
 export default function InteractiveRating({
   peptideId,
-  initialUserRating,
-  initialAvg,
-  initialCount,
   isLoggedIn,
+  general,
+  effectiveness,
+  sideEffects,
 }: InteractiveRatingProps) {
-  const [userRating, setUserRating] = useState(initialUserRating);
-  const [avg, setAvg] = useState(initialAvg);
-  const [count, setCount] = useState(initialCount);
-  const [loading, setLoading] = useState(false);
+  const [state, setState] = useState({
+    general: { ...general },
+    effectiveness: { ...effectiveness },
+    sideEffects: { ...sideEffects },
+  });
+  const [loading, setLoading] = useState<Dimension | null>(null);
 
-  async function handleRate(stars: number) {
+  async function handleRate(dimension: Dimension, stars: number) {
     if (!isLoggedIn || loading) return;
-    setLoading(true);
+    setLoading(dimension);
 
-    const prevUserRating = userRating;
-    const prevAvg = avg;
-    const prevCount = count;
+    const prev = { ...state[dimension] };
 
     // Optimistic update
+    const prevUserRating = prev.userRating;
     let newSum: number;
     let newCount: number;
     if (prevUserRating) {
-      newSum = prevAvg * prevCount - prevUserRating + stars;
-      newCount = prevCount;
+      newSum = prev.avg * prev.count - prevUserRating + stars;
+      newCount = prev.count;
     } else {
-      newSum = prevAvg * prevCount + stars;
-      newCount = prevCount + 1;
+      newSum = prev.avg * prev.count + stars;
+      newCount = prev.count + 1;
     }
-    setUserRating(stars);
-    setAvg(newCount > 0 ? newSum / newCount : 0);
-    setCount(newCount);
+
+    setState((s) => ({
+      ...s,
+      [dimension]: {
+        userRating: stars,
+        avg: newCount > 0 ? newSum / newCount : 0,
+        count: newCount,
+      },
+    }));
 
     const supabase = createClient();
     const { error } = await supabase.rpc("upsert_rating", {
       p_peptide_id: peptideId,
       p_user_id: (await supabase.auth.getUser()).data.user!.id,
-      p_stars: stars,
+      [DIMENSION_CONFIG[dimension].rpcParam]: stars,
     });
 
     if (error) {
-      // Revert on error
-      setUserRating(prevUserRating);
-      setAvg(prevAvg);
-      setCount(prevCount);
+      setState((s) => ({ ...s, [dimension]: prev }));
     }
 
-    setLoading(false);
+    setLoading(null);
   }
 
-  return (
-    <div className="bg-card border border-border rounded-lg p-5">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <p className="text-sm text-muted mb-1">Average Rating</p>
-          <StarRating rating={avg} count={count} size="lg" />
-        </div>
+  const dimensions: Dimension[] = ["effectiveness", "sideEffects", "general"];
 
-        {isLoggedIn ? (
-          <div>
-            <p className="text-sm text-muted mb-1">
-              {userRating ? "Your rating" : "Rate this peptide"}
-            </p>
-            <StarRating
-              rating={userRating || 0}
-              interactive
-              userRating={userRating || undefined}
-              onRate={handleRate}
-              size="lg"
-            />
-          </div>
-        ) : (
-          <p className="text-sm text-muted">
-            <a href="/auth/login" className="text-primary hover:underline">
-              Log in
-            </a>{" "}
-            to rate this peptide
-          </p>
-        )}
+  return (
+    <div className="bg-card border border-border rounded-lg p-4">
+      <div className="space-y-2.5">
+        {dimensions.map((dim) => {
+          const config = DIMENSION_CONFIG[dim];
+          const d = state[dim];
+          return (
+            <div key={dim} className="flex items-center gap-3 flex-wrap">
+              <div className="w-[100px] shrink-0">
+                <span className="text-sm text-foreground">{config.label}</span>
+                {config.hint && (
+                  <span className="text-xs text-muted ml-1">({config.hint})</span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1">
+                <StarRating rating={d.avg} count={d.count} size="sm" />
+              </div>
+
+              <div className="ml-auto">
+                {isLoggedIn ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted">
+                      {d.userRating ? "Yours:" : "Rate:"}
+                    </span>
+                    <StarRating
+                      rating={d.userRating || 0}
+                      interactive
+                      userRating={d.userRating || undefined}
+                      onRate={(stars) => handleRate(dim, stars)}
+                      size="sm"
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {!isLoggedIn && (
+        <p className="text-sm text-muted mt-3 text-center">
+          <a href="/auth/login" className="text-primary hover:underline">
+            Log in
+          </a>{" "}
+          to rate this peptide
+        </p>
+      )}
     </div>
   );
 }

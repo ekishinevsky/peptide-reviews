@@ -23,22 +23,29 @@ export default async function PeptideDetailPage({
   if (!peptide) notFound();
 
   const p = peptide as Peptide;
-  const avgRating = p.rating_count > 0 ? p.rating_sum / p.rating_count : 0;
+
+  const generalAvg = p.rating_count > 0 ? p.rating_sum / p.rating_count : 0;
+  const effectivenessAvg = p.effectiveness_count > 0 ? p.effectiveness_sum / p.effectiveness_count : 0;
+  const sideEffectsAvg = p.side_effects_count > 0 ? p.side_effects_sum / p.side_effects_count : 0;
 
   // Fetch current user and their rating
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let userRating: number | null = null;
+  let userGeneralRating: number | null = null;
+  let userEffectivenessRating: number | null = null;
+  let userSideEffectsRating: number | null = null;
   if (user) {
     const { data: rating } = await supabase
       .from("ratings")
-      .select("stars")
+      .select("stars, effectiveness, side_effects")
       .eq("peptide_id", p.id)
       .eq("user_id", user.id)
       .single();
-    userRating = rating?.stars ?? null;
+    userGeneralRating = rating?.stars ?? null;
+    userEffectivenessRating = rating?.effectiveness ?? null;
+    userSideEffectsRating = rating?.side_effects ?? null;
   }
 
   // Fetch threads
@@ -67,10 +74,10 @@ export default async function PeptideDetailPage({
 
       <InteractiveRating
         peptideId={p.id}
-        initialUserRating={userRating}
-        initialAvg={avgRating}
-        initialCount={p.rating_count}
         isLoggedIn={!!user}
+        general={{ avg: generalAvg, count: p.rating_count, userRating: userGeneralRating }}
+        effectiveness={{ avg: effectivenessAvg, count: p.effectiveness_count, userRating: userEffectivenessRating }}
+        sideEffects={{ avg: sideEffectsAvg, count: p.side_effects_count, userRating: userSideEffectsRating }}
       />
 
       <div className="mt-8">

@@ -1,7 +1,13 @@
-import { categories } from "@/lib/categories";
+import { createClient } from "@/lib/supabase/server";
 import SidebarLink from "./SidebarLink";
 
-export default function LeftSidebar() {
+export default async function LeftSidebar() {
+  const supabase = await createClient();
+  const { data: peptides } = await supabase
+    .from("peptides")
+    .select("name, slug")
+    .order("name", { ascending: true });
+
   return (
     <aside className="hidden lg:block w-[270px] shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border bg-card">
       <nav className="py-3 space-y-0.5">
@@ -30,17 +36,16 @@ export default function LeftSidebar() {
 
         <div className="pt-4 pb-2 px-4">
           <p className="text-xs font-semibold text-muted uppercase tracking-wider">
-            Categories
+            Peptides
           </p>
         </div>
 
-        {categories.map((cat) => (
+        {(peptides || []).map((p) => (
           <SidebarLink
-            key={cat.slug}
-            href={`/explore?category=${cat.slug}`}
-            icon={<span className="text-base">{cat.icon}</span>}
+            key={p.slug}
+            href={`/peptides/${p.slug}`}
           >
-            {cat.name}
+            p/{p.name}
           </SidebarLink>
         ))}
       </nav>

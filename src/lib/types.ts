@@ -5,6 +5,10 @@ export interface Peptide {
   description: string | null;
   rating_sum: number;
   rating_count: number;
+  effectiveness_sum: number;
+  effectiveness_count: number;
+  side_effects_sum: number;
+  side_effects_count: number;
   created_at: string;
 }
 
@@ -54,7 +58,9 @@ export interface Rating {
   id: string;
   peptide_id: string;
   user_id: string;
-  stars: number;
+  stars: number | null;
+  effectiveness: number | null;
+  side_effects: number | null;
   created_at: string;
 }
 

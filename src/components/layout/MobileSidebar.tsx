@@ -4,7 +4,6 @@ import { useSidebar } from "./SidebarContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { categories } from "@/lib/categories";
 
 function MobileLink({
   href,
@@ -35,7 +34,11 @@ function MobileLink({
   );
 }
 
-export default function MobileSidebar() {
+interface MobileSidebarProps {
+  peptides: { name: string; slug: string }[];
+}
+
+export default function MobileSidebar({ peptides }: MobileSidebarProps) {
   const { open, close } = useSidebar();
   const pathname = usePathname();
 
@@ -77,19 +80,18 @@ export default function MobileSidebar() {
 
           <div className="pt-4 pb-2 px-4">
             <p className="text-xs font-semibold text-muted uppercase tracking-wider">
-              Categories
+              Peptides
             </p>
           </div>
 
-          {categories.map((cat) => (
+          {peptides.map((p) => (
             <MobileLink
-              key={cat.slug}
-              href={`/explore?category=${cat.slug}`}
-              active={false}
+              key={p.slug}
+              href={`/peptides/${p.slug}`}
+              active={pathname === `/peptides/${p.slug}`}
               onClose={close}
-              icon={<span className="text-base">{cat.icon}</span>}
             >
-              {cat.name}
+              p/{p.name}
             </MobileLink>
           ))}
         </nav>
