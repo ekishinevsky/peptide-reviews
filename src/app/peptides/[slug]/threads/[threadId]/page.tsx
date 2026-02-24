@@ -101,6 +101,13 @@ export default async function ThreadDetailPage({
           {thread.body && (
             <p className="mt-3 whitespace-pre-wrap">{thread.body}</p>
           )}
+          {thread.image_url && (
+            <img
+              src={thread.image_url}
+              alt="Thread image"
+              className="mt-3 max-w-full rounded-lg border border-border"
+            />
+          )}
         </div>
       </div>
 

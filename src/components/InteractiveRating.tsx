@@ -71,7 +71,9 @@ export default function InteractiveRating({
     const { error } = await supabase.rpc("upsert_rating", {
       p_peptide_id: peptideId,
       p_user_id: (await supabase.auth.getUser()).data.user!.id,
-      [DIMENSION_CONFIG[dimension].rpcParam]: stars,
+      p_stars: dimension === "general" ? stars : null,
+      p_effectiveness: dimension === "effectiveness" ? stars : null,
+      p_side_effects: dimension === "sideEffects" ? stars : null,
     });
 
     if (error) {

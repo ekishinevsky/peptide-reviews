@@ -48,6 +48,13 @@ export default function CommentItem({
               <span>{timeAgo(comment.created_at)}</span>
             </div>
             <p className="text-sm mt-1 whitespace-pre-wrap">{comment.body}</p>
+            {comment.image_url && (
+              <img
+                src={comment.image_url}
+                alt="Comment image"
+                className="mt-2 max-w-full max-h-80 rounded-lg border border-border"
+              />
+            )}
             {isLoggedIn && (
               <button
                 type="button"

@@ -43,7 +43,12 @@ export default async function TopNav() {
 
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-muted hidden sm:inline">{profile?.username}</span>
+              <Link
+                href="/profile"
+                className="text-sm text-muted hover:text-foreground hidden sm:inline"
+              >
+                {profile?.username}
+              </Link>
               <form action="/auth/logout" method="POST">
                 <button
                   type="submit"

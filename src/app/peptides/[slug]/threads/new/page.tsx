@@ -4,10 +4,12 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function NewThreadPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -50,6 +52,7 @@ export default function NewThreadPage() {
         user_id: user.id,
         title,
         body: body || null,
+        image_url: imageUrl || null,
       })
       .select("id")
       .single();
@@ -107,6 +110,17 @@ export default function NewThreadPage() {
             rows={6}
             placeholder="Share your thoughts, experiences, questions..."
             className="w-full bg-input border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Image <span className="text-muted">(optional)</span>
+          </label>
+          <ImageUpload
+            onUpload={setImageUrl}
+            imageUrl={imageUrl}
+            onRemove={() => setImageUrl("")}
           />
         </div>
 

@@ -25,6 +25,7 @@ export interface Thread {
   user_id: string;
   title: string;
   body: string | null;
+  image_url: string | null;
   upvotes: number;
   downvotes: number;
   comment_count: number;
@@ -38,6 +39,7 @@ export interface Comment {
   user_id: string;
   parent_id: string | null;
   body: string;
+  image_url: string | null;
   upvotes: number;
   downvotes: number;
   created_at: string;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import ImageUpload from "./ImageUpload";
 
 interface CommentFormProps {
   threadId: string;
@@ -18,6 +19,7 @@ export default function CommentForm({
   placeholder = "Write a comment...",
 }: CommentFormProps) {
   const [body, setBody] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -44,6 +46,7 @@ export default function CommentForm({
       user_id: user.id,
       parent_id: parentId || null,
       body: body.trim(),
+      image_url: imageUrl || null,
     });
 
     if (insertError) {
@@ -58,6 +61,7 @@ export default function CommentForm({
     });
 
     setBody("");
+    setImageUrl("");
     setLoading(false);
     onCancel?.();
     router.refresh();
@@ -76,6 +80,11 @@ export default function CommentForm({
         className="w-full bg-input border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
       />
       <div className="flex items-center gap-2">
+        <ImageUpload
+          onUpload={setImageUrl}
+          imageUrl={imageUrl}
+          onRemove={() => setImageUrl("")}
+        />
         <button
           type="submit"
           disabled={loading || !body.trim()}

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { ThreadWithPeptide } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
